@@ -13,7 +13,7 @@ export default function Navbar() {
 
   const navLinks = [
     { label: t('nav.home'), href: '/' },
-    { label: t('nav.services'), href: '/services/speech-language-therapy' },
+    { label: t('nav.services'), href: '/services' },
     { label: t('nav.packages'), href: '/packages' },
     { label: t('nav.booking'), href: '/booking' },
     { label: t('nav.about'), href: '/about' },
@@ -42,22 +42,30 @@ export default function Navbar() {
           scrolled ? 'shadow-lg' : ''
         }`}
       >
+
           <div
-        className={`glass-pill rounded-pill px-4 py-2.5 flex items-center gap-6 transition-all duration-300 ${
-          scrolled ? 'bg-card/90 backdrop-blur-xl' : 'bg-card/70 backdrop-blur-md'
+        className={`glass-pill rounded-pill px-4 py-2.5 flex items-center gap-6 transition-all duration-300 backdrop-blur-[12px] border-b border-border/60 ${
+          scrolled ? 'bg-card/90' : 'bg-card/70'
         }`}
       >
 
+
+
+
+
+
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 shrink-0 rounded-full bg-white/0 overflow-hidden flex items-center justify-center">
+          <Link to="/" className="flex items-center gap-2.5 shrink-0">
+            <div className="h-10 w-10 shrink-0 rounded-xl bg-white overflow-hidden flex items-center justify-center shadow-sm">
               <img
                 src="/logo/Riyada%20Center%20Logo%20Souce-01.png"
                 alt="Riyada Center"
                 className="w-full h-full object-contain"
               />
             </div>
-            <span className="font-display font-bold text-text-primary text-sm hidden sm:block">Riyada Center</span>
+            <span dir="ltr" className="font-display font-bold text-lg whitespace-nowrap hidden sm:block text-text-primary">
+              Riyada Center
+            </span>
           </Link>
 
           {/* Desktop links */}
@@ -107,8 +115,9 @@ export default function Navbar() {
 
             <Link
               to="/booking"
-              className="hidden sm:inline-flex items-center justify-center px-5 py-2 bg-brand-blue text-white font-semibold text-sm rounded-pill shadow-button hover:scale-105 hover:brightness-110 transition-all duration-200"
+              className="hidden sm:inline-flex items-center justify-center px-5 py-2 bg-brand-blue text-primary-foreground font-semibold text-sm rounded-pill shadow-button hover:scale-105 hover:brightness-110 transition-all duration-200"
             >
+
               {t('nav.bookNow')}
             </Link>
             <button
@@ -126,9 +135,10 @@ export default function Navbar() {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div
-            className="absolute inset-0 bg-black/20 backdrop-blur-sm dark:bg-black/40"
+            className="absolute inset-0 bg-bg-base/60 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
+
 
           <div className="absolute top-20 left-4 right-4 bg-card rounded-card shadow-xl p-6 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200 border border-border/60">
 
