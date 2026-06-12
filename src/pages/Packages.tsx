@@ -13,7 +13,7 @@ const packages = [
     hoursPerWeekAR: 'حسب الحاجة',
     discount: '-',
     monthlyFee: '350 SAR/Hour',
-    monthlyFeeAR: '350 ريال/ساعة',
+    monthlyFeeAR: '٣٥٠ ريال/ساعة',
     hoursLabel: 'As Needed',
     period: 'Hour',
     price: '350',
