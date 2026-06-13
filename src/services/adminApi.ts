@@ -1,4 +1,4 @@
-const BASE = 'http://localhost:4000';
+const BASE = import.meta.env.VITE_API_URL ?? 'https://riyada-medical-backend-production.up.railway.app';
 
 function getToken() {
   return localStorage.getItem('admin_token') ?? '';
