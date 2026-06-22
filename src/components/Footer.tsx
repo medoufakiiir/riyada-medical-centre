@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { MapPin, Phone, Mail, Instagram, Twitter } from 'lucide-react';
+import { MapPin, Phone, Mail, Instagram, Facebook } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { useLanguage } from '../LanguageProvider';
@@ -118,7 +118,6 @@ export default function Footer() {
               {[
                 { label: t('nav.home'),        href: '/' },
                 { label: t('nav.services'),    href: '/services' },
-                { label: t('nav.packages'),    href: '/packages' },
                 { label: t('footer.about'),    href: '/about' },
                 { label: t('footer.contactUs'),href: '/contact' },
                 { label: t('footer.bookSession'), href: '/booking' },
@@ -194,18 +193,31 @@ export default function Footer() {
 
             <div className="flex items-center gap-2.5 mt-6">
               <a
-                href="#"
-                aria-label="Instagram"
+                href="https://www.facebook.com/profile.php?id=61590784002184"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Riyada Center on Facebook"
+                className="w-9 h-9 rounded-full bg-white/8 border border-white/10 flex items-center justify-center text-white/50 hover:bg-brand-blue hover:text-white hover:border-brand-blue transition-all duration-200"
+              >
+                <Facebook size={15} />
+              </a>
+              <a
+                href="https://www.instagram.com/riyada_medical_center/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Riyada Center on Instagram"
                 className="w-9 h-9 rounded-full bg-white/8 border border-white/10 flex items-center justify-center text-white/50 hover:bg-brand-blue hover:text-white hover:border-brand-blue transition-all duration-200"
               >
                 <Instagram size={15} />
               </a>
               <a
-                href="#"
-                aria-label="Twitter / X"
+                href="https://x.com/Riyada_m_center"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Riyada Center on X"
                 className="w-9 h-9 rounded-full bg-white/8 border border-white/10 flex items-center justify-center text-white/50 hover:bg-brand-blue hover:text-white hover:border-brand-blue transition-all duration-200"
               >
-                <Twitter size={15} />
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
               </a>
             </div>
           </motion.div>
@@ -219,10 +231,18 @@ export default function Footer() {
           transition={{ duration: 0.6, delay: 0.45 }}
         >
           <p className="text-white/30 text-xs">{t('footer.allRights')}</p>
-          <div className="flex items-center gap-1.5">
-            {['#3355EE','#FF4D94','#FFCC22','#33CC44','#7766DD'].map((color) => (
-              <div key={color} className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-            ))}
+          <div className="flex items-center gap-4">
+            <Link to="/terms" className="text-white/30 hover:text-white/70 text-xs transition-colors duration-200">
+              {t('footer.terms')}
+            </Link>
+            <Link to="/privacy" className="text-white/30 hover:text-white/70 text-xs transition-colors duration-200">
+              {t('footer.privacy')}
+            </Link>
+            <div className="flex items-center gap-1.5">
+              {['#3355EE','#FF4D94','#FFCC22','#33CC44','#7766DD'].map((color) => (
+                <div key={color} className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+              ))}
+            </div>
           </div>
         </motion.div>
       </div>

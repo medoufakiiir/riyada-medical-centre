@@ -74,7 +74,6 @@ export default function App() {
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/403" element={<Forbidden />} />
-          <Route path="*" element={<NotFound />} />
 
           {/* Admin — lazy loaded */}
           <Route path="/admin/login" element={<Suspense fallback={<AdminFallback />}><AdminLogin /></Suspense>} />
@@ -92,6 +91,9 @@ export default function App() {
             <Route path="chatbot" element={<RoleGuard allowed={['chatbot']}><ChatbotAdmin /></RoleGuard>} />
             <Route path="users" element={<RoleGuard allowed={['users']}><UsersAdmin /></RoleGuard>} />
           </Route>
+
+          {/* Catch-all — must be last */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </LanguageProvider>
       <Analytics />

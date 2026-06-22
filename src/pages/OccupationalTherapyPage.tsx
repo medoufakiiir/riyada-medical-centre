@@ -1,6 +1,10 @@
 import { Hand, FileText, Target, Lightbulb, CheckCircle2 } from 'lucide-react';
 import ServicePageTemplate from '../components/services/ServicePageTemplate';
 import type { ServiceStep, ServiceFaq, ServiceCondition } from '../components/services/ServicePageTemplate';
+import SEO from '../components/SEO';
+import { ServiceSchema, BreadcrumbSchema, FAQSchema } from '../components/StructuredData';
+import { useLanguage } from '../LanguageProvider';
+import { getPageSEO } from '../seo';
 
 const whatWeDo = [
   { en: 'Fine motor skill development', ar: 'تنمية المهارات الحركية الدقيقة' },
@@ -70,8 +74,8 @@ const faqs: ServiceFaq[] = [
   {
     q: 'How do I know if my child needs occupational therapy?',
     qAR: 'كيف أعرف إن كان طفلي بحاجة إلى علاج وظيفي؟',
-    a: 'Signs include difficulty with handwriting, dressing, using utensils, avoiding tactile activities, or appearing clumsy. A free consultation can help determine whether OT is the right fit.',
-    aAR: 'تشمل العلامات صعوبة الكتابة أو ارتداء الملابس أو استخدام الأدوات، وتجنب الأنشطة اللمسية، أو الحركة غير المنسجمة. استشارة مجانية تساعد في تحديد ما إذا كان العلاج الوظيفي مناسبًا.',
+    a: 'Signs include difficulty with handwriting, dressing, using utensils, avoiding tactile activities, or appearing clumsy. A consultation can help determine whether OT is the right fit.',
+    aAR: 'تشمل العلامات صعوبة الكتابة أو ارتداء الملابس أو استخدام الأدوات، وتجنب الأنشطة اللمسية، أو الحركة غير المنسجمة. استشارة تساعد في تحديد ما إذا كان العلاج الوظيفي مناسبًا.',
   },
   {
     q: 'What are sensory processing difficulties?',
@@ -102,8 +106,16 @@ const heroVisual = (
 );
 
 export default function OccupationalTherapyPage() {
+  const { locale } = useLanguage();
+  const seo = getPageSEO('occupationalTherapy', locale)!;
+
   return (
-    <ServicePageTemplate
+    <>
+      <SEO {...seo} />
+      <ServiceSchema name="Occupational Therapy" description={seo.description} url="/services/occupational-therapy" />
+      <BreadcrumbSchema items={[{ name: locale === 'ar' ? 'الرئيسية' : 'Home', url: '/' }, { name: locale === 'ar' ? 'الخدمات' : 'Services', url: '/services' }, { name: locale === 'ar' ? 'العلاج الوظيفي' : 'Occupational Therapy', url: '/services/occupational-therapy' }]} />
+      <FAQSchema items={faqs.map(f => ({ question: locale === 'ar' ? f.qAR : f.q, answer: locale === 'ar' ? f.aAR : f.a }))} />
+      <ServicePageTemplate
       heroBgStyle={{ backgroundColor: '#C8F5B5' }}
       heroVisual={heroVisual}
       tagIcon={Hand}
@@ -131,5 +143,6 @@ export default function OccupationalTherapyPage() {
       }}
       ctaMascotSrc="/assets/mascots/skill-builder.png"
     />
+    </>
   );
 }

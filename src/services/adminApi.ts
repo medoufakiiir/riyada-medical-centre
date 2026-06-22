@@ -4,6 +4,13 @@ function getToken() {
   return localStorage.getItem('admin_token') ?? '';
 }
 
+export function getStoredAdmin(): AdminUser | null {
+  try {
+    const raw = localStorage.getItem('admin_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 async function req<T>(method: string, path: string, body?: unknown, auth = true): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (auth) headers['Authorization'] = `Bearer ${getToken()}`;
@@ -18,8 +25,10 @@ async function req<T>(method: string, path: string, body?: unknown, auth = true)
 export const adminApi = {
   // Auth
   login: (email: string, password: string) =>
-    req<{ token: string; user: AdminUser }>('POST', '/auth/login', { email, password }, false),
+    req<{ token: string; user: AdminUser; mustChangePassword: boolean }>('POST', '/auth/login', { email, password }, false),
   me: () => req<AdminUser>('GET', '/auth/me'),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    req('POST', '/auth/change-password', { currentPassword, newPassword }),
 
   // Dashboard
   dashboard: () => req<DashboardData>('GET', '/admin/dashboard'),
@@ -30,6 +39,7 @@ export const adminApi = {
   booking: (id: string) => req<Booking>('GET', `/admin/bookings/${id}`),
   updateBooking: (id: string, data: Partial<Booking>) => req<Booking>('PATCH', `/admin/bookings/${id}`, data),
   deleteBooking: (id: string) => req('DELETE', `/admin/bookings/${id}`),
+  bulkDeleteBookings: (ids: string[]) => req('POST', '/admin/bookings/bulk-delete', { ids }),
 
   // Messages
   messages: (params?: MessageParams) =>
@@ -38,16 +48,13 @@ export const adminApi = {
   markAllRead: () => req('PATCH', '/admin/messages/mark-all-read', {}),
   updateMessage: (id: string, data: Partial<ContactMessage>) => req<ContactMessage>('PATCH', `/admin/messages/${id}`, data),
   deleteMessage: (id: string) => req('DELETE', `/admin/messages/${id}`),
+  bulkDeleteMessages: (ids: string[]) => req('POST', '/admin/messages/bulk-delete', { ids }),
 
   // Services
   services: () => req<Service[]>('GET', '/admin/services'),
+  createService: (data: Omit<Service, 'id'>) => req<Service>('POST', '/admin/services', data),
   updateService: (id: string, data: Partial<Service>) => req<Service>('PATCH', `/admin/services/${id}`, data),
-
-  // Packages
-  packages: () => req<Package[]>('GET', '/admin/packages'),
-  createPackage: (data: Omit<Package, 'id' | 'createdAt' | 'updatedAt'>) => req<Package>('POST', '/admin/packages', data),
-  updatePackage: (id: string, data: Partial<Package>) => req<Package>('PATCH', `/admin/packages/${id}`, data),
-  deletePackage: (id: string) => req('DELETE', `/admin/packages/${id}`),
+  deleteService: (id: string) => req('DELETE', `/admin/services/${id}`),
 
   // Team
   team: () => req<TeamMember[]>('GET', '/admin/team'),
@@ -55,11 +62,20 @@ export const adminApi = {
   updateTeamMember: (id: string, data: Partial<TeamMember>) => req<TeamMember>('PATCH', `/admin/team/${id}`, data),
   deleteTeamMember: (id: string) => req('DELETE', `/admin/team/${id}`),
 
+  // Users
+  users: () => req<ManagedUser[]>('GET', '/admin/users'),
+  createUser: (data: { email: string; name: string; role: string; password?: string }) => req<ManagedUser>('POST', '/admin/users', data),
+  updateUser: (id: string, data: Partial<{ name: string; email: string; role: string; isActive: boolean }>) => req<ManagedUser>('PATCH', `/admin/users/${id}`, data),
+  resetPassword: (id: string) => req<{ ok: boolean; tempPassword: string }>('POST', `/admin/users/${id}/reset-password`, {}),
+
   // Settings
   settings: () => req<Record<string, string>>('GET', '/admin/settings'),
   updateSettings: (data: Record<string, string>) => req('PATCH', '/admin/settings', data),
-  changePassword: (currentPassword: string, newPassword: string) =>
-    req('POST', '/admin/settings/change-password', { currentPassword, newPassword }),
+
+  // Permissions
+  permissions: () => req<{ chatbot: boolean }>('GET', '/admin/settings/permissions'),
+  chatbotPermissions: () => req<{ id: string; name: string; email: string; role: string; isActive: boolean; chatbotEnabled: boolean }[]>('GET', '/admin/settings/permissions/chatbot'),
+  toggleChatbotAccess: (userId: string, enabled: boolean) => req('PATCH', `/admin/settings/permissions/chatbot/${userId}`, { enabled }),
 };
 
 // Public form submission
@@ -76,11 +92,21 @@ export async function submitContact(data: Record<string, string>) {
 }
 
 // Types
-export interface AdminUser { id: string; email: string; name: string; role: string }
+export type Role = 'SUPER_ADMIN' | 'MANAGER' | 'RECEPTIONIST';
+
+export interface AdminUser { id: string; email: string; name: string; role: Role }
+
+export interface ManagedUser { id: string; email: string; name: string; role: Role; isActive: boolean; mustChangePassword: boolean; createdAt: string }
+
+export const ROLE_NAV: Record<Role, string[]> = {
+  SUPER_ADMIN:  ['dashboard', 'bookings', 'messages', 'services', 'team', 'chatbot', 'users', 'settings'],
+  MANAGER:      ['dashboard', 'bookings', 'messages', 'chatbot', 'users', 'settings'],
+  RECEPTIONIST: ['dashboard', 'bookings', 'messages', 'settings'],
+};
 
 export interface Booking {
   id: string; ref: string; parentName: string; childName: string; childAge: string;
-  phone: string; email: string; service: string; package: string;
+  phone: string; email: string; service: string;
   date: string; time: string; notes: string; status: string; adminNotes: string;
   createdAt: string; updatedAt: string;
 }
@@ -93,13 +119,6 @@ export interface ContactMessage {
 export interface Service {
   id: string; slug: string; titleEn: string; titleAr: string;
   descEn: string; descAr: string; isActive: boolean; order: number;
-}
-
-export interface Package {
-  id: string; nameEn: string; nameAr: string; price: number; currency: string;
-  period: string; featuresEn: string; featuresAr: string;
-  isPopular: boolean; isActive: boolean; order: number;
-  createdAt: string; updatedAt: string;
 }
 
 export interface TeamMember {
