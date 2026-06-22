@@ -72,8 +72,38 @@ export const adminApi = {
   settings: () => req<Record<string, string>>('GET', '/admin/settings'),
   updateSettings: (data: Record<string, string>) => req('PATCH', '/admin/settings', data),
 
+  // Analytics
+  analytics: () => req<AnalyticsData>('GET', '/admin/analytics'),
+  contactsSummary: () => req<ContactsSummary>('GET', '/admin/analytics/contacts-summary'),
+
+  // Exports
+  exportUrl: (type: string) => `${BASE}/admin/analytics/export/${type}?token=${getToken()}`,
+
+  // Contacts
+  contacts: (params?: ContactsParams) =>
+    req<ContactsList>('GET', `/admin/contacts?${new URLSearchParams(params as never).toString()}`),
+  exportContacts: (source?: string) => `${BASE}/admin/contacts/export?source=${source || 'all'}&token=${getToken()}`,
+
+  // Calendar
+  calendarBookings: () =>
+    req<CalendarEvent[]>('GET', '/admin/calendar/bookings'),
+  calendarBlocked: () =>
+    req<BlockedSlot[]>('GET', '/admin/calendar/blocked'),
+  calendarBlock: (date: string, time?: string, reason?: string) =>
+    req<BlockedSlot>('POST', '/admin/calendar/blocked', { date, time, reason }),
+  calendarUnblock: (id: string) =>
+    req('DELETE', `/admin/calendar/blocked/${id}`),
+  calendarBookingsUrl: () => `${BASE}/admin/calendar/bookings?token=${getToken()}`,
+  calendarStatus: () => req<CalendarStatus>('GET', '/admin/calendar/status'),
+  calendarGoogleConnect: () => req<{ url: string }>('GET', '/admin/calendar/google/connect'),
+  calendarGoogleSync: () => req<{ synced: number }>('POST', '/admin/calendar/google/sync'),
+  calendarGoogleDisconnect: () => req('DELETE', '/admin/calendar/google/disconnect'),
+  calendarMsConnect: () => req<{ url: string }>('GET', '/admin/calendar/microsoft/connect'),
+  calendarMsSync: () => req<{ synced: number }>('POST', '/admin/calendar/microsoft/sync'),
+  calendarMsDisconnect: () => req('DELETE', '/admin/calendar/microsoft/disconnect'),
+
   // Permissions
-  permissions: () => req<{ chatbot: boolean }>('GET', '/admin/settings/permissions'),
+  permissions: () => req<{ chatbot: boolean; analytics: boolean; contacts: boolean }>('GET', '/admin/settings/permissions'),
   chatbotPermissions: () => req<{ id: string; name: string; email: string; role: string; isActive: boolean; chatbotEnabled: boolean }[]>('GET', '/admin/settings/permissions/chatbot'),
   toggleChatbotAccess: (userId: string, enabled: boolean) => req('PATCH', `/admin/settings/permissions/chatbot/${userId}`, { enabled }),
 };
@@ -92,16 +122,17 @@ export async function submitContact(data: Record<string, string>) {
 }
 
 // Types
-export type Role = 'SUPER_ADMIN' | 'MANAGER' | 'RECEPTIONIST';
+export type Role = 'SUPER_ADMIN' | 'MANAGER' | 'RECEPTIONIST' | 'MARKETING';
 
 export interface AdminUser { id: string; email: string; name: string; role: Role }
 
 export interface ManagedUser { id: string; email: string; name: string; role: Role; isActive: boolean; mustChangePassword: boolean; createdAt: string }
 
 export const ROLE_NAV: Record<Role, string[]> = {
-  SUPER_ADMIN:  ['dashboard', 'bookings', 'messages', 'services', 'team', 'chatbot', 'users', 'settings'],
-  MANAGER:      ['dashboard', 'bookings', 'messages', 'chatbot', 'users', 'settings'],
-  RECEPTIONIST: ['dashboard', 'bookings', 'messages', 'settings'],
+  SUPER_ADMIN:  ['dashboard', 'calendar', 'bookings', 'messages', 'services', 'team', 'chatbot', 'analytics', 'contacts', 'users', 'settings'],
+  MANAGER:      ['dashboard', 'calendar', 'bookings', 'messages', 'chatbot', 'users', 'settings'],
+  RECEPTIONIST: ['dashboard', 'calendar', 'bookings', 'messages', 'settings'],
+  MARKETING:    ['dashboard', 'bookings', 'messages', 'chatbot', 'analytics', 'contacts', 'settings'],
 };
 
 export interface Booking {
@@ -137,3 +168,83 @@ export interface BookingList { bookings: Booking[]; total: number; page: number;
 export interface MessageList { messages: ContactMessage[]; total: number; page: number; pages: number }
 export interface BookingParams { status?: string; search?: string; page?: string; limit?: string }
 export interface MessageParams { read?: string; page?: string; limit?: string }
+export interface ContactsParams { search?: string; source?: string; page?: string; limit?: string }
+
+export interface ContactsList {
+  contacts: ContactEntry[];
+  total: number;
+  page: number;
+  pages: number;
+}
+
+export interface ContactEntry {
+  id: string; name: string; childName: string; childAge: string;
+  email: string; phone: string; service: string; source: string; date: string;
+}
+
+export interface AnalyticsData {
+  overview: {
+    totalBookings: number; pendingBookings: number; confirmedBookings: number; cancelledBookings: number;
+    weekBookings: number; monthBookings: number;
+    totalMessages: number; unreadMessages: number; weekMessages: number; monthMessages: number;
+    totalChatSessions: number; weekChatSessions: number; monthChatSessions: number;
+    totalChatAppointments: number; pendingChatAppts: number;
+    totalVisitors: number; weekVisitors: number; monthVisitors: number; todayVisitors: number;
+    conversionRate: number;
+  };
+  trends: {
+    bookingsByWeek: { week: string; count: number }[];
+    messagesByWeek: { week: string; count: number }[];
+    chatSessionsByWeek: { week: string; count: number }[];
+    visitorsByWeek: { week: string; count: number }[];
+  };
+  topServices: { name: string; count: number }[];
+  topPages: { path: string; count: number }[];
+  deviceSplit: Record<string, number>;
+  statusBreakdown: Record<string, number>;
+  chatLanguages: Record<string, number>;
+}
+
+export interface ContactsSummary {
+  totalUniqueEmails: number;
+  totalUniquePhones: number;
+  totalBookingLeads: number;
+  totalMessageLeads: number;
+  totalChatbotLeads: number;
+}
+
+export interface BlockedSlot {
+  id: string;
+  date: string;
+  time: string | null;
+  reason: string;
+  createdAt: string;
+}
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  color: string;
+  extendedProps: {
+    bookingId: string;
+    ref: string;
+    parentName: string;
+    childName: string;
+    childAge: string;
+    phone: string;
+    email: string;
+    service: string;
+    status: string;
+    notes: string;
+    adminNotes: string;
+  };
+}
+
+export interface CalendarStatus {
+  connected: boolean;
+  provider: string | null;
+  lastSynced: string | null;
+  calendarId?: string;
+}
